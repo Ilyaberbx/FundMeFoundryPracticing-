@@ -2,8 +2,10 @@ tasks:
   - name: Script Task
     init: echo 'init script'
     command: echo 'start script'
-  - name: Install Foundry
-    init: curl -L https://foundry.paradigm.xyz | bash && source ~/.bashrc && foundryup
+
+  - name: Install Foundry Task
+    init: echo 'Test'
+
 ports:
   - name: Frontend
     description: Port 3000 for the frontend
