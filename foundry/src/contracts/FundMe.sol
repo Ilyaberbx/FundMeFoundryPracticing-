@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-error NotOwner();
+error FundMe__NotOwner();
 
 import {PriceConverter} from "src/libraries/PriceConverter.sol";
 
@@ -16,6 +16,7 @@ contract FundMe {
     mapping(address => uint256) public addressToAmountFunded;
 
     constructor() {
+        
         i_owner = msg.sender;
     }
 
@@ -38,7 +39,7 @@ contract FundMe {
 
     modifier onlyOwner() {
         if (msg.sender != i_owner) {
-            revert NotOwner();
+            revert FundMe__NotOwner();
         }
         _;
     }

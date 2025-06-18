@@ -20,6 +20,6 @@ library PriceConverter {
     }
 
     function getVersion() internal view returns (uint256) {
-        return AggregatorV3Interface(priceFeedAddress).version();
+        return new AggregatorV3Interface(priceFeedAddress).version();
     }
 }
