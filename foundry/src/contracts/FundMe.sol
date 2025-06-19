@@ -16,24 +16,32 @@ contract FundMe {
     mapping(address => uint256) public addressToAmountFunded;
 
     constructor() {
-        
         i_owner = msg.sender;
     }
 
     function fund() public payable {
-        require(msg.value.getConversionRate() >= MINIMUM_USD, "Fund amount is too low");
+        require(
+            msg.value.getConversionRate() >= MINIMUM_USD,
+            "Fund amount is too low"
+        );
         funders.push(msg.sender);
         addressToAmountFunded[msg.sender] += msg.value;
     }
 
     function withdraw() public onlyOwner {
-        for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
+        for (
+            uint256 funderIndex = 0;
+            funderIndex < funders.length;
+            funderIndex++
+        ) {
             address funder = funders[funderIndex];
             addressToAmountFunded[funder] = 0;
         }
 
         funders = new address[](0);
-        (bool callSuccess,  ) = payable(msg.sender).call{value: address(this).balance}("");
+        (bool callSuccess, ) = payable(msg.sender).call{
+            value: address(this).balance
+        }("");
         require(callSuccess, "Call failed");
     }
 
