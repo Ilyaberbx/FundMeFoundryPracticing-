@@ -4,24 +4,25 @@ pragma solidity ^0.8.18;
 error FundMe__NotOwner();
 
 import {PriceConverter} from "src/libraries/PriceConverter.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 contract FundMe {
     using PriceConverter for uint256;
 
     uint256 public constant MINIMUM_USD = 5e18;
-
-    address public immutable i_owner;
-
+    address public immutable I_OWNER;
+    AggregatorV3Interface private immutable PRICEFEED;
     address[] public funders;
     mapping(address => uint256) public addressToAmountFunded;
 
-    constructor() {
-        i_owner = msg.sender;
+    constructor(address priceFeedAddress) {
+        I_OWNER = msg.sender;
+        PRICEFEED = AggregatorV3Interface(priceFeedAddress);
     }
 
     function fund() public payable {
         require(
-            msg.value.getConversionRate() >= MINIMUM_USD,
+            msg.value.getConversionRate(PRICEFEED) >= MINIMUM_USD,
             "Fund amount is too low"
         );
         funders.push(msg.sender);
@@ -45,8 +46,12 @@ contract FundMe {
         require(callSuccess, "Call failed");
     }
 
+    function getVersion() public view returns (uint256) {
+        return PRICEFEED.version();
+    }
+
     modifier onlyOwner() {
-        if (msg.sender != i_owner) {
+        if (msg.sender != I_OWNER) {
             revert FundMe__NotOwner();
         }
         _;
