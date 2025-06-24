@@ -10,36 +10,39 @@ contract FundMe {
     using PriceConverter for uint256;
 
     uint256 public constant MINIMUM_USD = 5e18;
-    address public immutable I_OWNER;
-    AggregatorV3Interface private immutable PRICEFEED;
-    address[] public funders;
-    mapping(address => uint256) public addressToAmountFunded;
+
+    address private immutable I_OWNER;
+    AggregatorV3Interface private immutable I_PRICEFEED;
+    address[] private s_funders;
+    mapping(address => uint256) private s_addressToAmountFunded;
 
     constructor(address priceFeedAddress) {
         I_OWNER = msg.sender;
-        PRICEFEED = AggregatorV3Interface(priceFeedAddress);
+        I_PRICEFEED = AggregatorV3Interface(priceFeedAddress);
     }
 
     function fund() public payable {
         require(
-            msg.value.getConversionRate(PRICEFEED) >= MINIMUM_USD,
+            msg.value.getConversionRate(I_PRICEFEED) >= MINIMUM_USD,
             "Fund amount is too low"
         );
-        funders.push(msg.sender);
-        addressToAmountFunded[msg.sender] += msg.value;
+        s_funders.push(msg.sender);
+        s_addressToAmountFunded[msg.sender] += msg.value;
     }
 
     function withdraw() public onlyOwner {
+        uint256 fundersLength = s_funders.length;
+
         for (
             uint256 funderIndex = 0;
-            funderIndex < funders.length;
+            funderIndex < fundersLength;
             funderIndex++
         ) {
-            address funder = funders[funderIndex];
-            addressToAmountFunded[funder] = 0;
+            address funder = s_funders[funderIndex];
+            s_addressToAmountFunded[funder] = 0;
         }
 
-        funders = new address[](0);
+        s_funders = new address[](0);
         (bool callSuccess, ) = payable(msg.sender).call{
             value: address(this).balance
         }("");
@@ -47,7 +50,7 @@ contract FundMe {
     }
 
     function getVersion() public view returns (uint256) {
-        return PRICEFEED.version();
+        return I_PRICEFEED.version();
     }
 
     modifier onlyOwner() {
@@ -63,5 +66,19 @@ contract FundMe {
 
     fallback() external payable {
         fund();
+    }
+
+    function getAddressToAmountFunded(
+        address fundingAddress
+    ) external view returns (uint256) {
+        return s_addressToAmountFunded[fundingAddress];
+    }
+
+    function getFunder(uint256 index) external view returns (address) {
+        return s_funders[index];
+    }
+
+    function getOwner() external view returns (address) {
+        return I_OWNER;
     }
 }
